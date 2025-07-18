@@ -624,6 +624,104 @@ Use dry-run mode for testing:
 python main.py --dry-run
 ```
 
+## Multi-Pipeline Project Organization
+
+For projects requiring multiple interconnected pipelines that follow the same template pattern, consider this scalable organization structure:
+
+### Recommended Project Structure
+
+```
+your-project-name/
+├── pipelines/
+│   ├── ingestion/                    # First pipeline
+│   │   ├── src/
+│   │   │   └── ingestion_pipeline/
+│   │   │       ├── config/
+│   │   │       ├── data/
+│   │   │       ├── processors/
+│   │   │       └── utils/
+│   │   ├── configs/
+│   │   │   ├── dev/
+│   │   │   └── prod/
+│   │   └── main.py
+│   ├── transformation/               # Second pipeline
+│   │   ├── src/
+│   │   │   └── transformation_pipeline/
+│   │   │       ├── config/
+│   │   │       ├── data/
+│   │   │       ├── processors/
+│   │   │       └── utils/
+│   │   ├── configs/
+│   │   │   ├── dev/
+│   │   │   └── prod/
+│   │   └── main.py
+│   └── aggregation/                  # Third pipeline
+│       ├── src/
+│       │   └── aggregation_pipeline/
+│       │       ├── config/
+│       │       ├── data/
+│       │       ├── processors/
+│       │       └── utils/
+│       ├── configs/
+│       │   ├── dev/
+│       │   └── prod/
+│       └── main.py
+├── shared/                           # Common utilities
+│   ├── src/
+│   │   └── shared/
+│   │       ├── config/
+│   │       ├── data/
+│   │       ├── processors/
+│   │       └── utils/
+│   └── __init__.py
+├── orchestration/                    # Pipeline orchestration
+│   ├── airflow/                     # or prefect, dagster, etc.
+│   ├── databricks/                  # Databricks workflows
+│   └── scripts/
+├── configs/                          # Global configurations
+│   ├── dev/
+│   └── prod/
+├── tests/                           # Cross-pipeline tests
+├── docs/                            # Documentation
+└── requirements.txt                 # Common dependencies
+```
+
+### Multi-Pipeline Benefits
+
+1. **Modular Design**: Each pipeline is self-contained but follows the same structure
+2. **Shared Components**: Common utilities are centralized to avoid duplication
+3. **Independent Development**: Teams can work on different pipelines simultaneously
+4. **Scalable**: Easy to add new pipelines or modify existing ones
+5. **Consistent**: All pipelines follow the same patterns and conventions
+
+### Implementation Strategy
+
+1. **Start with the template**: Copy this repository structure for each pipeline
+2. **Extract shared components**: Move common utilities to the `shared/` directory
+3. **Create orchestration layer**: Use tools like Airflow, Prefect, or Databricks Workflows
+4. **Implement dependency management**: Each pipeline outputs to tables that the next pipeline consumes
+5. **Add cross-pipeline testing**: Ensure the full workflow works end-to-end
+
+### Pipeline Dependencies
+
+Configure each pipeline to consume outputs from previous stages:
+
+```yaml
+# transformation/configs/dev/config.yaml
+input_sources:
+  - table: "catalog.database.ingestion_output"  # Output from ingestion pipeline
+    source_name: "processed_data"
+    columns: ["id", "processed_field", "timestamp"]
+
+# aggregation/configs/dev/config.yaml  
+input_sources:
+  - table: "catalog.database.transformation_output"  # Output from transformation pipeline
+    source_name: "transformed_data"
+    columns: ["id", "aggregated_field", "date"]
+```
+
+This structure maintains the benefits of this template while scaling to multiple interconnected pipelines.
+
 ## Contributing
 
 1. Follow the existing code patterns
