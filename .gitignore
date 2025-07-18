@@ -1,0 +1,120 @@
+# Data files
+*.txt
+!requirements.txt
+!README.txt
+*.gif
+*.GIF
+
+# Generated plots and visualizations (but keep downloaded assets)
+generated_plots/
+output_figures/
+temp_plots/
+
+# Logs
+*.log
+*.logs
+logs/
+log/
+*.out
+*.err
+
+# DataBricks logs
+driver-logs/
+executor-logs/
+eventlog/
+
+# Spark logs
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Delta Lake tables
+delta-table/
+**/delta-table/
+*.delta
+_delta_log/
+**/_delta_log/
+
+# Common data formats (optional - add if needed)
+*.csv
+*.parquet
+*.json
+*.xlsx
+*.xls
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# DataBricks
+.databricks/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Large files and directories
+data/
+datasets/
+raw_data/
+processed_data/
+
+# IDE files
+.idea/
+*.swp
+*.swo
+*~
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Configuration files with secrets
+.env
+.env.local
+.env.production
+config.ini
+secrets.yaml
+
+# Temporary files
+tmp/
+temp/
+.tmp/

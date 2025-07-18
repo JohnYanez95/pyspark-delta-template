@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Black configuration (matches Databricks Ctrl+Shift+F formatting)
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.venv
+  | _build
+  | build
+  | dist
+  | spark-warehouse
+  | metastore_db
+)/
+'''
+# Skip string normalization to match Databricks style
+skip-string-normalization = true

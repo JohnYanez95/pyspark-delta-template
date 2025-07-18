@@ -221,6 +221,117 @@ class CustomProcessor(BaseProcessor):
         return StructType([...])
 ```
 
+## Local Development Setup
+
+### Code Formatting with Black
+
+This template includes a `pyproject.toml` file configured to match Databricks formatting standards (Ctrl+Shift+F).
+
+#### Installation
+```bash
+# Install black for code formatting
+pip install black
+
+# Or install with the dev dependencies
+pip install -e ".[dev]"
+```
+
+#### Usage
+```bash
+# Format all Python files in the project
+black .
+
+# Format specific files
+black src/pyspark_delta_template/
+
+# Check formatting without making changes
+black --check .
+
+# Show what would be formatted
+black --diff .
+```
+
+#### VS Code Integration
+Add this to your VS Code settings (`.vscode/settings.json`):
+```json
+{
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length=88",
+        "--skip-string-normalization"
+    ],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    }
+}
+```
+
+#### PyCharm/IntelliJ Integration
+1. Go to **File → Settings → Tools → External Tools**
+2. Add new tool with:
+   - Name: `Black`
+   - Program: `black`
+   - Arguments: `$FilePath$`
+   - Working directory: `$ProjectFileDir$`
+
+#### Pre-commit Hook (Optional)
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Create .pre-commit-config.yaml
+cat > .pre-commit-config.yaml << EOF
+repos:
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        language_version: python3
+EOF
+
+# Install the hook
+pre-commit install
+```
+
+### Package Installation for Development
+
+The template can be installed as a local package for easier development:
+
+```bash
+# Install in development mode (editable)
+pip install -e .
+
+# Install with optional dev dependencies
+pip install -e ".[dev]"
+
+# Install with docs dependencies
+pip install -e ".[docs]"
+```
+
+This allows you to:
+- Import modules from anywhere: `from pyspark_delta_template.config import ConfigLoader`
+- Run the pipeline as a command: `pyspark-delta-pipeline --config configs/dev/config.yaml`
+- Make changes to the code and see them immediately without reinstalling
+
+### Directory Structure Best Practices
+
+```
+your-project/
+├── src/
+│   └── your_project_name/          # Main package
+├── tests/                          # Test files
+├── configs/                        # Configuration files
+├── docs/                          # Documentation
+├── scripts/                       # Utility scripts
+├── notebooks/                     # Jupyter notebooks for exploration
+├── .vscode/                       # VS Code settings
+├── pyproject.toml                 # Project configuration
+├── requirements.txt               # Dependencies
+├── .gitignore                     # Git ignore rules
+└── README.md                      # Project documentation
+```
+
 ## Key Features
 
 ### Serialization-Safe Patterns
