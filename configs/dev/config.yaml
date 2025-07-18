@@ -1,0 +1,156 @@
+# Development Environment Configuration
+# PySpark Delta Lake Template
+
+environment: dev
+
+# Input data sources - support multiple Delta tables
+input_sources:
+  - table: "dev_catalog.bronze.raw_transactions"
+    source_name: "transactions"
+    columns:
+      - "transaction_id"
+      - "user_id"
+      - "amount"
+      - "timestamp"
+      - "category"
+    filters:
+      - "amount > 0"
+      - "timestamp >= '2024-01-01'"
+    
+  - table: "dev_catalog.bronze.user_profiles"
+    source_name: "users"
+    columns:
+      - "user_id"
+      - "user_type"
+      - "registration_date"
+      - "country"
+
+# Strategy for combining multiple input sources
+input_sources_strategy: "union"  # Options: "union", "join"
+
+# Join configuration (used when input_sources_strategy is "join")
+# input_sources[1].join_config:
+#   keys: ["user_id"]
+#   type: "inner"
+
+# Output destination configuration
+output_destination:
+  table: "dev_catalog.silver.processed_transactions"
+  storage_path: "s3://dev-delta-lake/silver/processed_transactions/"
+  
+  # Primary keys for merge operations
+  primary_keys:
+    - "transaction_id"
+  
+  # Partition columns for optimization
+  partition_columns:
+    - "processing_date"
+  
+  # Delta table properties
+  table_properties:
+    "autoOptimize.optimizeWrite": "true"
+    "autoOptimize.autoCompact": "true"
+    "delta.autoOptimize.optimizeWrite": "true"
+    "delta.autoOptimize.autoCompact": "true"
+  
+  # Additional properties set via ALTER TABLE
+  additional_properties:
+    "delta.logRetentionDuration": "interval 30 days"
+    "delta.deletedFileRetentionDuration": "interval 7 days"
+  
+  # Z-order columns for optimization
+  zorder_columns:
+    - "user_id"
+    - "timestamp"
+  
+  # Audit columns configuration
+  add_audit_columns: true
+  audit_columns:
+    add_timestamp: true
+    add_version: true
+  
+  # Auto-optimization settings
+  auto_optimize: true
+
+# Processing parameters
+processing_parameters:
+  # Processor-specific settings
+  aggregation_method: "mean"  # Options: "mean", "sum", "count"
+  calculation_multiplier: 1.5
+  
+  # Columns for processing
+  key_columns:
+    - "user_id"
+    - "category"
+  
+  numeric_columns:
+    - "amount"
+  
+  # Partitioning for applyInPandas
+  partition_columns:
+    - "category"
+  
+  # Data filtering
+  filters:
+    - "amount > 10.0"
+  
+  # Business rules
+  business_rules:
+    add_quality_flag: true
+    min_record_count: 1
+  
+  # Processing metadata
+  version: "1.0.0"
+
+# Spark configuration
+spark_config:
+  app_name: "PySpark Delta Template - Dev"
+  
+  # Local development settings
+  "spark.master": "local[2]"
+  "spark.driver.memory": "2g"
+  "spark.executor.memory": "2g"
+  "spark.executor.cores": "2"
+  
+  # Delta Lake settings
+  "spark.sql.extensions": "io.delta.sql.DeltaSparkSessionExtension"
+  "spark.sql.catalog.spark_catalog": "org.apache.spark.sql.delta.catalog.DeltaCatalog"
+  
+  # Performance settings
+  "spark.sql.adaptive.enabled": "true"
+  "spark.sql.adaptive.coalescePartitions.enabled": "true"
+  "spark.sql.adaptive.coalescePartitions.minPartitionSize": "1MB"
+  "spark.sql.adaptive.coalescePartitions.initialPartitionNum": "10"
+  
+  # SQL configurations
+  sql_configs:
+    "spark.sql.adaptive.skewJoin.enabled": "true"
+    "spark.sql.adaptive.localShuffleReader.enabled": "true"
+
+# Unity Catalog configuration
+unity_catalog:
+  enabled: false  # Set to true when using Unity Catalog
+  catalog_name: "dev_catalog"
+  default_schema: "default"
+
+# Data validation settings
+data_validation:
+  required_columns:
+    - "transaction_id"
+    - "user_id"
+    - "amount"
+  
+  no_null_columns:
+    - "transaction_id"
+    - "user_id"
+
+# Logging configuration
+logging:
+  level: "DEBUG"
+  include_spark_logs: true
+
+# Development-specific settings
+development:
+  enable_debug_mode: true
+  sample_data_fraction: 0.1  # Process only 10% of data for faster development
+  max_records_per_batch: 10000

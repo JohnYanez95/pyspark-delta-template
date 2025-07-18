@@ -1,0 +1,204 @@
+# Production Environment Configuration
+# PySpark Delta Lake Template
+
+environment: prod
+
+# Input data sources - support multiple Delta tables
+input_sources:
+  - table: "prod_catalog.bronze.raw_transactions"
+    source_name: "transactions"
+    columns:
+      - "transaction_id"
+      - "user_id"
+      - "amount"
+      - "timestamp"
+      - "category"
+      - "merchant_id"
+      - "payment_method"
+    filters:
+      - "amount > 0"
+      - "timestamp >= current_date() - interval 7 days"
+    
+    # Incremental processing configuration
+    incremental:
+      timestamp_column: "timestamp"
+      # start_time and end_time can be set dynamically
+    
+  - table: "prod_catalog.bronze.user_profiles"
+    source_name: "users"
+    columns:
+      - "user_id"
+      - "user_type"
+      - "registration_date"
+      - "country"
+      - "tier"
+      - "status"
+    filters:
+      - "status = 'active'"
+
+# Strategy for combining multiple input sources
+input_sources_strategy: "join"
+
+# Join configuration for combining sources
+input_sources:
+  - table: "prod_catalog.bronze.raw_transactions"
+    # ... (same as above)
+  - table: "prod_catalog.bronze.user_profiles"
+    # ... (same as above)
+    join_config:
+      keys: ["user_id"]
+      type: "inner"
+
+# Output destination configuration
+output_destination:
+  table: "prod_catalog.gold.processed_transactions"
+  storage_path: "s3://prod-delta-lake/gold/processed_transactions/"
+  
+  # Primary keys for merge operations
+  primary_keys:
+    - "transaction_id"
+  
+  # Partition columns for optimization
+  partition_columns:
+    - "processing_date"
+    - "country"
+  
+  # Delta table properties
+  table_properties:
+    "autoOptimize.optimizeWrite": "true"
+    "autoOptimize.autoCompact": "true"
+    "delta.autoOptimize.optimizeWrite": "true"
+    "delta.autoOptimize.autoCompact": "true"
+    "delta.tuneFileSizesForRewrites": "true"
+  
+  # Additional properties set via ALTER TABLE
+  additional_properties:
+    "delta.logRetentionDuration": "interval 90 days"
+    "delta.deletedFileRetentionDuration": "interval 30 days"
+    "delta.checkpointInterval": "20"
+  
+  # Z-order columns for optimization
+  zorder_columns:
+    - "user_id"
+    - "timestamp"
+    - "country"
+  
+  # Audit columns configuration
+  add_audit_columns: true
+  audit_columns:
+    add_timestamp: true
+    add_version: true
+  
+  # Auto-optimization settings
+  auto_optimize: true
+
+# Processing parameters
+processing_parameters:
+  # Processor-specific settings
+  aggregation_method: "sum"  # Changed to sum for production
+  calculation_multiplier: 1.0
+  
+  # Columns for processing
+  key_columns:
+    - "user_id"
+    - "category"
+    - "country"
+  
+  numeric_columns:
+    - "amount"
+  
+  # Partitioning for applyInPandas - more granular for production
+  partition_columns:
+    - "country"
+    - "category"
+  
+  # Data filtering - more restrictive for production
+  filters:
+    - "amount > 5.0"
+    - "amount < 100000.0"  # Fraud prevention
+  
+  # Business rules
+  business_rules:
+    add_quality_flag: true
+    min_record_count: 10
+  
+  # Processing metadata
+  version: "1.0.0"
+
+# Spark configuration for production
+spark_config:
+  app_name: "PySpark Delta Template - Production"
+  
+  # Production cluster settings (these would be set by cluster manager)
+  "spark.driver.memory": "8g"
+  "spark.driver.maxResultSize": "4g"
+  "spark.executor.memory": "16g"
+  "spark.executor.cores": "4"
+  "spark.executor.instances": "10"
+  
+  # Delta Lake settings
+  "spark.sql.extensions": "io.delta.sql.DeltaSparkSessionExtension"
+  "spark.sql.catalog.spark_catalog": "org.apache.spark.sql.delta.catalog.DeltaCatalog"
+  
+  # Performance settings for production
+  "spark.sql.adaptive.enabled": "true"
+  "spark.sql.adaptive.coalescePartitions.enabled": "true"
+  "spark.sql.adaptive.coalescePartitions.minPartitionSize": "64MB"
+  "spark.sql.adaptive.coalescePartitions.initialPartitionNum": "200"
+  "spark.sql.adaptive.advisoryPartitionSizeInBytes": "128MB"
+  
+  # Serialization and compression
+  "spark.serializer": "org.apache.spark.serializer.KryoSerializer"
+  "spark.sql.parquet.compression.codec": "snappy"
+  
+  # Caching and shuffle
+  "spark.sql.adaptive.localShuffleReader.enabled": "true"
+  "spark.sql.adaptive.skewJoin.enabled": "true"
+  "spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes": "256MB"
+  
+  # SQL configurations
+  sql_configs:
+    "spark.sql.adaptive.skewJoin.enabled": "true"
+    "spark.sql.adaptive.localShuffleReader.enabled": "true"
+    "spark.sql.adaptive.coalescePartitions.enabled": "true"
+
+# Unity Catalog configuration for production
+unity_catalog:
+  enabled: true
+  catalog_name: "prod_catalog"
+  default_schema: "gold"
+
+# Data validation settings - more strict for production
+data_validation:
+  required_columns:
+    - "transaction_id"
+    - "user_id"
+    - "amount"
+    - "timestamp"
+    - "category"
+  
+  no_null_columns:
+    - "transaction_id"
+    - "user_id"
+    - "amount"
+    - "timestamp"
+
+# Logging configuration for production
+logging:
+  level: "INFO"
+  include_spark_logs: false
+
+# Production-specific settings
+production:
+  enable_monitoring: true
+  alert_on_failure: true
+  data_quality_checks: true
+  performance_monitoring: true
+  
+  # SLA requirements
+  max_processing_time_minutes: 60
+  max_memory_usage_gb: 100
+  
+  # Backup and recovery
+  backup_enabled: true
+  backup_retention_days: 30

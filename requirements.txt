@@ -1,0 +1,29 @@
+# PySpark Delta Lake Template Requirements
+# Optimized for Databricks Runtime 15.4 LTS
+
+# Core dependencies - versions compatible with Databricks Runtime 15.4 LTS
+# Note: PySpark and Delta Lake are pre-installed on Databricks clusters
+
+# Configuration management
+PyYAML>=6.0.1
+
+# Data processing (pandas/numpy are pre-installed but specifying for local development)
+pandas>=1.5.3
+numpy>=1.24.3
+
+# Additional utilities that may be needed
+# Most common packages are already available in Databricks Runtime 15.4 LTS
+
+# For local development only (not needed on Databricks)
+# Uncomment these lines if running locally without Databricks
+# pyspark==3.5.0
+# delta-spark==3.0.0
+
+# Development and testing tools (optional)
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Code quality tools (optional)
+black>=23.7.0
+flake8>=6.0.0
+mypy>=1.5.0
